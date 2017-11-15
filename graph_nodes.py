@@ -6,8 +6,9 @@ import hashlib
 
 #define for processing
 DEBUG_LEVEL = 2
-input_file_name = "./input/dhry/dump"
-output_file_name = "./output/dhry"
+#input_file_name = "../graph_gen/input/basic_example/dump"
+input_file_name = "/soe/nkabylka/build/release/run/crafty_dump/dump"
+output_file_name = "./output/crafty"
 
 #helper functions
 def get_timestamp():
@@ -29,7 +30,21 @@ tokens = {}
 labels = {}
 graph_tokens = {}
 graph_id = {}
+giveup_threshold = 10000
+total_givenup = 0
+global giveup
+global iterations
 def traverse(G, u, depth):
+  global iterations
+  global giveup
+  iterations += 1
+
+  if iterations>giveup_threshold:
+    giveup = True
+
+  if giveup:
+    return
+
   if u in observe:
     return
   if (depth==len(observe)-1):
@@ -130,44 +145,81 @@ depth=2
 start = get_timestamp()
 print(start)
 graph_size = 0
+degree = 0
 for key, value in graph.items():
   graph_size += 1
   subgraph_edges = []
   subgraph_nodes = [int(key)]
   visited = []
+  degrees = {}
+  max_degree = 0
   for d in range(depth):
     deeper_subgraph_nodes = []
     for node in subgraph_nodes:
       visited.append(node)
       for deeper_node in graph[str(node)]:
         if (deeper_node[0] not in visited):
+          v1=0
+          v2=0
           if (node<deeper_node[0]):
-            subgraph_edges.append((node,deeper_node[0]))
+            v1 = node
+            v2 = deeper_node[0]
           else:
-            subgraph_edges.append((deeper_node[0],node))
+            v2 = node
+            v1 = deeper_node[0]
+          subgraph_edges.append((v1,v2))
+          if v1 not in degrees:
+            degrees[v1] = 1
+          else:
+            degrees[v1] += 1
+
+          if v2 not in degrees:
+            degrees[v2] = 1
+          else:
+            degrees[v2] += 1
+
+          if degrees[v1] > max_degree:
+            max_degree = degrees[v1]
+          if degrees[v1] > max_degree:
+            max_degree = degrees[v2]
           deeper_subgraph_nodes.append(deeper_node[0])
     subgraph_nodes = deeper_subgraph_nodes
 
-  #build sub-graph for traversal from the edge list
-  subgraph_inst = {}
-  for edge in subgraph_edges:
-    v1, v2 = int(edge[0]), int(edge[1])
-    real_edge = is_real_edge(graph, v1,v2)
-    if str(v1) not in subgraph_inst:
-      subgraph_inst[str(v1)] = [(v2,real_edge)]
-    else:
-      subgraph_inst[str(v1)].append((v2,real_edge))
+  skip = False
+  if max_degree != degree:
+    degree = max_degree
+  else:
+    skip = True
 
-    if str(v2) not in subgraph_inst:
-      subgraph_inst[str(v2)] = [(v1,not real_edge)]
-    else:
-      subgraph_inst[str(v2)].append((v1,not real_edge))
+  if not skip:
+    #build sub-graph for traversal from the edge list
+    subgraph_inst = {}
+    for edge in subgraph_edges:
+      v1, v2 = int(edge[0]), int(edge[1])
+      real_edge = is_real_edge(graph, v1,v2)
+      if str(v1) not in subgraph_inst:
+        subgraph_inst[str(v1)] = [(v2,real_edge)]
+      else:
+        subgraph_inst[str(v1)].append((v2,real_edge))
 
-  subgraph_size = len(subgraph_inst)
-  debug(1, "Start traversal from  node with id = {0}. Subgraph size = {1}\n{2}\n\n".format(key, subgraph_size, value))
+      if str(v2) not in subgraph_inst:
+        subgraph_inst[str(v2)] = [(v1,not real_edge)]
+      else:
+        subgraph_inst[str(v2)].append((v1,not real_edge))
 
-  for k, v in subgraph_inst.items():
-    traverse(subgraph_inst, int(k), 0)
+
+    subgraph_size = len(subgraph_inst)
+    #debug(1, "Start traversal from  node with id = {0}. Subgraph size = {1}\n{2}\n\n".format(key, subgraph_size, value))
+    giveup = False
+    iterations = 0
+    for k, v in subgraph_inst.items():
+      traverse(subgraph_inst, int(k), 0)
+      if giveup:
+        debug(1, "Giving up on this subgraph...")
+        total_givenup += 1
+        break
+  #else:
+    #debug(1, "Same graph... Skipping...")
 
 
 end = get_timestamp()
@@ -199,3 +251,4 @@ with open(fileName+"/one","w") as one, open(fileName+"/two","w") as two,\
 debug(1, "Graph size = {0}".format(graph_size))
 debug(1, "Start time = {0}".format(start))
 debug(1, "End time = {0}".format(end))
+debug(1, "Total give up = {0}".format(total_givenup))
