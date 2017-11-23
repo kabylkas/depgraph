@@ -1,5 +1,8 @@
 import re
 
+input_path = "./output/dhry/" 
+output_path = "./output/dhry_subgraphs/"
+
 opcode = {"0": "iOpInvalid",
           "1": "iRALU",
           "2": "iAALU",
@@ -22,7 +25,7 @@ opcode = {"0": "iOpInvalid",
          "19": "iCALU_DIV",
          "20": "iMAX"}
 
-def generate_graph(subgraph_str, x, o, o_n):
+def generate_graph(subgraph_str, x, o, o_n, coverage, total_nodes):
   b = subgraph_str.split(")(")
   labels = [0 for i in range(len(b))]
   sg_str = ""
@@ -38,8 +41,8 @@ def generate_graph(subgraph_str, x, o, o_n):
   n = len(labels)
   #generate nodes
   nodes = []
-  with open("subgraphs/{0}.sg".format(x), "w") as outfile:
-    outfile.write("{0} {1} {2}\n".format(n,o,o_n))
+  with open(output_path+"{0}.sg".format(x), "w") as outfile:
+    outfile.write("{0} {1} {2} {3}\n".format(n,o,o_n, coverage))
     for i in range(n):
       n_id = "n"+str(i)
       label = labels[i]
@@ -64,18 +67,23 @@ def generate_graph(subgraph_str, x, o, o_n):
     for edge in edges:
       outfile.write("{0} {1} {2}\n".format(edge[0], edge[1], edge[2]))
 
-total_occurance = 0
-show_up_to = 80
 i=0
-with open("graph.output.1", "r") as infile:
-  for line in infile:
-    info = line.split(',')
-    occurance = float(info[2].split("]")[0])
-    occurance_n = int(info[1])
-    total_occurance+=occurance
-    if total_occurance>=show_up_to:
-      break
-   
-    subgraph_str = info[0].split("[")[1]
-    generate_graph(subgraph_str,i, occurance, occurance_n)
+with open(input_path+"one", "r") as in_sg_str, \
+     open(input_path+"two", "r") as in_occ, \
+     open(input_path+"three", "r") as in_occ_perc, \
+     open(input_path+"four", "r") as in_coverage:
+
+  in_sg_str = [sg_str for sg_str in in_sg_str]
+  in_occ = [occ for occ in in_occ]
+  in_occ_perc = [occ_perc for occ_perc in in_occ_perc]
+  in_coverage = [int(coverage) for coverage in in_coverage]
+  total_nodes = sum(in_coverage)
+  for i in range(len(in_sg_str)):
+    subgraph_str = in_sg_str[i].replace("\n", "")
+    occurance = int(in_occ[i])
+    occurance_perc = float(in_occ_perc[i])
+    coverage = int(in_coverage[i])
+
+    generate_graph(subgraph_str,i, occurance_perc, occurance, coverage, total_nodes)
+
     i+=1
