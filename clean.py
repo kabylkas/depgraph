@@ -123,6 +123,7 @@ graph = {}
 edges_processed = 0
 interval_count = 0
 while os.path.isfile(input_file_name+str(i)):
+  print(get_timestamp())
   with open(input_file_name+str(i), "r") as infile:
     for line in infile:
       nodes = line.split()
@@ -140,12 +141,8 @@ while os.path.isfile(input_file_name+str(i)):
 
 
       if edges_processed%interval==0:
-        print("Graph size={0}".format(len(graph)))
         graph = clean_unreachable(graph)
-        dump_to_vis(graph, output_file_name+"before")
         graph = clean_redundant(graph)
-        dump_to_vis(graph, output_file_name+"after")
         graph = {}
         depths = {}
-        exit(0)
   i+=1
