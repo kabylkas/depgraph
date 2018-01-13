@@ -169,13 +169,13 @@ while os.path.isfile(input_file_name+str(i)):
               clean_graph[v1].append(v2)
 
         print("clean graph size:", count)
-        pickle.dump(labels, open("./clean_graphs/labels{0}".format(int(edges_processed/interval)), "wb"))
-        pickle.dump(clean_graph, open("./clean_graphs/{0}".format(int(edges_processed/interval)), "wb")) 
+        if int(edges_processed/interval)==36:
+          dump_to_vis(clean_graph, "takeslong.dump")
+          exit(0)
         graph = {}
-        depths = {}
+        #depths = {}
         killed_edges = []
         graph_latency = {}
         rev_graph = {}
         clean_graph = {}
         stop-=1
-  i+=1

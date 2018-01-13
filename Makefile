@@ -2,6 +2,12 @@ dhry_all: dhry0 dhry1 dhry2 dhry3 dhry4 dhry5
 
 crafty_all: c0 c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12 c13 c14 c15 
 
+clean:
+	rm -r clean_graphs
+	mkdir clean_graphs
+	rm -r traversed_graphs
+	mkdir traversed_graphs
+
 dhry0:
 	mkdir dhry_output/dhry0
 	python graph_edges_splitted.py ./input/dhry_edges/list ./dhry_output/dhry0 0 1
