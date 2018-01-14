@@ -31,21 +31,16 @@ def generate_graph(count, signature, file_name):
   N = len(signature_split)-1
   labels = [int(signature_split[i]) for i in range(N)]
   signature_str = signature_split[N];
-  #output nodes
-  with open(output_path+file_name, "w") as output_file:
-    for i in range(N):
-      output_file.write("n{0} {1} {2}\n".format(i+1, i, opcode[str(labels[i])]))
-
   #output edges
   adj_matrix = textwrap.wrap(signature_str, N)
   edge_num = 0
   with open(output_path+file_name, "a") as output_file:
-    output_file.write("EDGES\n")
+    output_file.write("source,target,value\n")
     for i in range(len(adj_matrix)):
       for j in range(len(adj_matrix[i])):
         if adj_matrix[i][j] == "1":
           edge_num+=1
-          output_file.write("e{0} n{1} n{2}\n".format(edge_num, i+1, j+1))
+          output_file.write("{0}[n{1}],{2}[n{3}],0\n".format(opcode[str(labels[i])], i+1, opcode[str(labels[j])],j+1))
   print(adj_matrix)
 
 sg_tuples = []
